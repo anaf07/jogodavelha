@@ -1,58 +1,96 @@
-const board = document.getElementById("board")
-const casinhas = board.getElementsByTagName("div")
-const boxVencedor = document.getElementById("vencedor")
+// jogodavelha.js
+document.addEventListener("DOMContentLoaded", () => {
+  const board = document.getElementById('board');
+  const winnerDisplay = document.getElementById('vencedor');
+  let currentPlayer = 'X';
+  let gameActive = true;
+  const gameState = Array(9).fill(null);
+  
+  const winningConditions = [
+    [0, 1, 2],
+    [3, 4, 5],
+    [6, 7, 8],
+    [0, 3, 6],
+    [1, 4, 7],
+    [2, 5, 8],
+    [0, 4, 8],
+    [2, 4, 6]
+  ];
 
-let jogadas = 0;
+  function handleCellPlayed(clickedCell, clickedCellIndex) {
+    gameState[clickedCellIndex] = currentPlayer;
+    clickedCell.textContent = currentPlayer;
+  }
 
-for (let i=0; i<casinhas.length; i++) {
-  console.log(casinhas[i])
-  casinhas[i].addEventListener('click', casinhaclick)
-}
+  function handlePlayerChange() {
+    currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
+  }
 
-function casinhaclick() {
-    if(this.innerHTML == "") {
-        if(jogadas%2 == 0) {
-            this.innerHTML = "X";
-        }else{
-            this.innerHTML = "O";
-        }
-        jogadas +=1;    
-    }
-    if(jogadas >=5){
-        verificaGanhador()
-    }
-}
-
-function verificaGanhador() {
-    //validando na horizontal
-    if(casinhas[0].innerHTML == casinhas[1].innerHTML && casinhas[1].innerHTML == casinhas[2].innerHTML) {
-        boxVencedor.innerHTML = "O '" + casinhas[0].innerHTML + "' Venceu!"
-    }
-    if(casinhas[3].innerHTML == casinhas[4].innerHTML && casinhas[4].innerHTML == casinhas[5].innerHTML) {
-        alert("O '" + casinhas[3].innerHTML + "' Venceu!")
-    }
-    if(casinhas[6].innerHTML == casinhas[7].innerHTML && casinhas[7].innerHTML == casinhas[8].innerHTML) {
-        alert("O '" + casinhas[6].innerHTML + "' Venceu!")
-    }
-
-    //validando na vertical
-    if(casinhas[0].innerHTML == casinhas[3].innerHTML && casinhas[3].innerHTML == casinhas[6].innerHTML) {
-        alert("O '" + casinhas[0].innerHTML + "' Venceu!")
-    }
-    if(casinhas[1].innerHTML == casinhas[4].innerHTML && casinhas[4].innerHTML == casinhas[7].innerHTML) {
-        alert("O '" + casinhas[1].innerHTML + "' Venceu!")
-    }
-    if(casinhas[2].innerHTML == casinhas[5].innerHTML && casinhas[5].innerHTML == casinhas[8].innerHTML) {
-        alert("O '" + casinhas[2].innerHTML + "' Venceu!")
+  function handleResultValidation() {
+    let roundWon = false;
+    for (let i = 0; i < 8; i++) {
+      const winCondition = winningConditions[i];
+      const a = gameState[winCondition[0]];
+      const b = gameState[winCondition[1]];
+      const c = gameState[winCondition[2]];
+      if (a === null || b === null || c === null) {
+        continue;
+      }
+      if (a === b && b === c) {
+        roundWon = true;
+        break;
+      }
     }
 
-    //validando na vertical
-    if(casinhas[0].innerHTML == casinhas[4].innerHTML && casinhas[4].innerHTML == casinhas[8].innerHTML) {
-        alert("O '" + casinhas[0].innerHTML + "' Venceu!")
-    }
-    if(casinhas[2].innerHTML == casinhas[4].innerHTML && casinhas[4].innerHTML == casinhas[6].innerHTML) {
-        alert("O '" + casinhas[2].innerHTML + "' Venceu!")
+    if (roundWon) {
+      winnerDisplay.textContent = `Jogador ${currentPlayer} venceu!`;
+      gameActive = false;
+      return;
     }
 
-    console.log(casinhas[0].innerHTML)
-}
+    const roundDraw = !gameState.includes(null);
+    if (roundDraw) {
+      winnerDisplay.textContent = 'Empate!';
+      gameActive = false;
+      return;
+    }
+
+    handlePlayerChange();
+  }
+
+  function handleCellClick(event) {
+    const clickedCell = event.target;
+    const clickedCellIndex = Array.from(board.children).indexOf(clickedCell);
+
+    if (gameState[clickedCellIndex] !== null || !gameActive) {
+      return;
+    }
+
+    handleCellPlayed(clickedCell, clickedCellIndex);
+    handleResultValidation();
+  }
+
+  function handleRestartGame() {
+    gameActive = true;
+    currentPlayer = 'X';
+    gameState.fill(null);
+    winnerDisplay.textContent = '';
+    Array.from(board.children).forEach(cell => (cell.textContent = ''));
+  }
+
+  // Create board
+  for (let i = 0; i < 9; i++) {
+    const cell = document.createElement('div');
+    cell.classList.add('casinha');
+    if (i % 2 !== 0) {
+      cell.classList.add('gray');
+    }
+    cell.addEventListener('click', handleCellClick);
+    board.appendChild(cell);
+  }
+
+  const restartButton = document.createElement('button');
+  restartButton.textContent = 'Reiniciar Jogo';
+  restartButton.addEventListener('click', handleRestartGame);
+  document.body.appendChild(restartButton);
+});
